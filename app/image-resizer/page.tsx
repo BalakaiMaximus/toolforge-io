@@ -19,7 +19,7 @@ function ImageResizerClient() {
     if (!file || (width <= 0 && height <= 0)) return;
     setIsLoading(true);
     try {
-      const resizedBlob = await resizeImage(file, width, height);
+      const resizedBlob = await resizeImage(file, width, height, aspectRatioLocked);
       const url = URL.createObjectURL(resizedBlob);
       setResizedImageUrl(url);
       toast.success('Image resized successfully!');

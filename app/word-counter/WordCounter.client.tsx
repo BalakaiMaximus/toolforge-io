@@ -3,9 +3,9 @@
 import { useState, useMemo } from "react";
 import ToolLayout from "../components/ToolLayout";
 import TextAreaTool from "../components/TextAreaTool";
-import { countWords, countChars, estimateReadingTime } from "../lib/textUtils";
+import { countWords, countChars, countLines, estimateReadingTime } from "../lib/textUtils";
 
-function WordCounterClient() {
+export default function WordCounterClient() {
   const [text, setText] = useState("");
   
   const wordCount = useMemo(() => countWords(text), [text]);

@@ -17,7 +17,8 @@ function ImageConverterClient() {
     if (!file) return;
     setIsLoading(true);
     try {
-      const convertedBlob = await convertImage(file, format);
+      const targetFormat = format === 'jpg' ? 'image/jpeg' : 'image/png';
+      const convertedBlob = await convertImage(file, targetFormat);
       const url = URL.createObjectURL(convertedBlob);
       setConvertedImageUrl(url);
       toast.success(`Image converted to ${format.toUpperCase()} successfully!`);
