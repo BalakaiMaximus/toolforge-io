@@ -1,4 +1,5 @@
 import ToolLayout from "../components/ToolLayout";
+import WordCounterClient from "./WordCounter.client";
 
 export default function WordCounterPage() {
   return (
