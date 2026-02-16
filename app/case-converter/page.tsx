@@ -1,4 +1,5 @@
 import ToolLayout from "../components/ToolLayout";
+import CaseConverterClient from "./CaseConverter.client";
 
 export default function CaseConverterPage() {
   return (
