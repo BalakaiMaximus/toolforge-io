@@ -1,29 +1,11 @@
-import { Metadata } from "next";
+"use client";
+
+import { useState, useMemo } from "react";
 import ToolLayout from "../components/ToolLayout";
 import TextAreaTool from "../components/TextAreaTool";
 import { formatJSON, minifyJSON, validateJSON } from "../lib/devUtils";
-import { useState } from "react";
-import { Copy, RefreshCcw, FileText, XCircle, Check, Loader2 } from "lucide-react";
+import { Copy, FileText, XCircle, Check, Loader2 } from "lucide-react";
 import toast from 'react-hot-toast';
-
-export const metadata: Metadata = {
-  title: "JSON Formatter & Validator - Format, Minify, Validate JSON Online | ToolForge",
-  description:
-    "Format, minify, and validate JSON data online. Beautify messy JSON or compress it for smaller payloads. Instant results, client-side.",
-  keywords: "json formatter, json validator, minify json, prettify json, json viewer, json tool",
-};
-
-export default function JSONFormatterPage() {
-  return (
-    <ToolLayout
-      title="JSON Formatter & Validator"
-      description="Format, minify, and validate your JSON data. Paste your JSON to instantly beautify, compress, or check its structure."
-      category="Developer Tools"
-    >
-      <JSONFormatterClient />
-    </ToolLayout>
-  );
-}
 
 function JSONFormatterClient() {
   const [jsonInput, setJsonInput] = useState("");
@@ -100,7 +82,6 @@ function JSONFormatterClient() {
         rows={12}
       />
 
-      {/* Tabs for Format, Minify, Validate */}
       <div className="flex items-center gap-2 border-b border-gray-200">
         <button
           onClick={() => setActiveTab("format")} 
@@ -122,7 +103,6 @@ function JSONFormatterClient() {
         </button>
       </div>
 
-      {/* Action Buttons */}
       <div className="flex items-center justify-between gap-4">
         <div className="flex gap-2">
           <button
@@ -167,7 +147,6 @@ function JSONFormatterClient() {
         </div>
       </div>
 
-      {/* Output Area */}
       {(formattedJson || minifiedJson || validation) && (
         <div className="mt-6 bg-gray-50 rounded-lg p-4 border border-gray-200 space-y-4">
           <h3 className="text-lg font-semibold text-gray-900">Output</h3>
@@ -207,7 +186,6 @@ function JSONFormatterClient() {
         </div>
       )}
 
-      {/* Related Tools */}
       <div className="border-t border-gray-200 pt-6 mt-8">
         <h4 className="text-sm font-medium text-gray-700 mb-3">Related Tools</h4>
         <div className="flex flex-wrap gap-2">
@@ -215,5 +193,17 @@ function JSONFormatterClient() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function Page() {
+  return (
+    <ToolLayout
+      title="JSON Formatter & Validator"
+      description="Format, minify, and validate your JSON data. Paste your JSON to instantly beautify, compress, or check its structure."
+      category="Developer Tools"
+    >
+      <JSONFormatterClient />
+    </ToolLayout>
   );
 }

@@ -1,216 +1,133 @@
-import { Metadata } from "next";
-import ToolLayout from "../components/ToolLayout";
-
-export const metadata: Metadata = {
-  title: "Image Converter - JPG to PNG, PNG to JPG | ToolForge",
-  description:
-    "Convert images between JPG and PNG formats online. Lossless conversion for PNG, adjustable quality for JPG. Free, client-side tool.",
-  keywords: "image converter, jpg to png, png to jpg, convert image format",
-};
-
-export default function ImageConverterPage() {
-  return (
-    <ToolLayout
-      title="Image Converter"
-      description="Convert images between JPG and PNG formats. Optimize images for different use cases and maintain quality."
-      category="Image Tools"
-    >
-      <ConverterClient />
-    </ToolLayout>
-  );
-}
-
 "use client";
 
-import { useState, useCallback } from "react";
-import { Download, FileImage, RefreshCcw, ImageDown } from "lucide-react";
-import FileDropZone from "../components/FileDropZone";
-import { convertImage, formatFileSize } from "../lib/imageUtils";
+import { useState } from "react";
+import ToolLayout from "../components/ToolLayout";
+import TextAreaTool from "../components/TextAreaTool";
+import { convertImage } from "../lib/imageUtils";
+import { Copy, RefreshCcw, FileText, XCircle, Check, Loader2, Download, Image as ImageIcon } from "lucide-react";
+import toast from 'react-hot-toast';
 
-function ConverterClient() {
+function ImageConverterClient() {
   const [file, setFile] = useState<File | null>(null);
-  const [format, setFormat] = useState("image/jpeg"); // Default to JPEG
-  const [converted, setConverted] = useState<Blob | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-
-  const handleFileSelect = useCallback((selectedFile: File) => {
-    setFile(selectedFile);
-    setConverted(null);
-    setPreviewUrl(URL.createObjectURL(selectedFile));
-  }, []);
+  const [format, setFormat] = useState<'jpg' | 'png'>('png'); // Default to PNG
+  const [convertedImageUrl, setConvertedImageUrl] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleConvert = async () => {
     if (!file) return;
-    
-    setLoading(true);
+    setIsLoading(true);
     try {
-      const result = await convertImage(file, format as "image/jpeg" | "image/png");
-      setConverted(result);
+      const convertedBlob = await convertImage(file, format);
+      const url = URL.createObjectURL(convertedBlob);
+      setConvertedImageUrl(url);
+      toast.success(`Image converted to ${format.toUpperCase()} successfully!`);
     } catch (error: any) {
-      alert(`Failed to convert image: ${error.message}`);
+      toast.error(`Error converting image: ${error.message}`);
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
 
   const handleDownload = () => {
-    if (!converted || !file) return;
-    
-    const url = URL.createObjectURL(converted);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `converted.${format === "image/jpeg" ? "jpg" : "png"}`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    if (!convertedImageUrl) return;
+    const link = document.createElement('a');
+    link.href = convertedImageUrl;
+    link.download = `converted_to_${format}.${format}`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    toast.success('Image downloaded!');
   };
 
-  const originalSizeFormatted = file ? formatFileSize(file.size) : 'N/A';
-  const convertedSizeFormatted = converted ? formatFileSize(converted.size) : 'N/A';
+  const handleClear = () => {
+    setFile(null);
+    setConvertedImageUrl(null);
+    if (convertedImageUrl) URL.revokeObjectURL(convertedImageUrl);
+  };
+
+  const originalFileName = file ? file.name : 'No file selected';
 
   return (
     <div className="space-y-6">
-      {!file ? (
-        <FileDropZone
-          onFileSelect={handleFileSelect}
-          accept="image/jpeg,image/png,image/webp"
-          maxSize={10}
-          label="Drop your image here, or click to browse (JPG, PNG, WebP)"
-        />
-      ) : (
-        <div className="space-y-6">
-          {/* Preview */}
-          <div className="bg-gray-50 rounded-lg p-4">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="font-medium text-gray-900">Selected Image</h3>
-              <button
-                onClick={() => {
-                  setFile(null);
-                  setConverted(null);
-                  if (previewUrl) URL.revokeObjectURL(previewUrl);
-                  setPreviewUrl(null);
-                }}
-                className="text-sm text-red-600 hover:text-red-700"
-              >
-                Remove
-              </button>
-            </div>
-            
-            {previewUrl && (
-              <div className="flex items-start gap-4">
-                <img
-                  src={previewUrl}
-                  alt="Preview"
-                  className="max-h-48 rounded-lg object-contain bg-gray-100"
-                />
-                <div className="flex-1">
-                  <p className="text-sm text-gray-600">
-                    <span className="font-medium">File:</span> {file.name}
-                  </p>
-                  <p className="text-sm text-gray-600">
-                    <span className="font-medium">Original size:</span>{" "}
-                    {originalSizeFormatted}
-                  </p>
-                </div>
-              </div>
-            )}
-          </div>
+      <TextAreaTool 
+        label="Image File"
+        value={originalFileName}
+        readOnly
+        rows={2}
+        placeholder="Drag and drop an image file here or click to upload"
+      />
 
-          {/* Format Selection */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Convert To
-              </label>
-              <select
-                value={format}
-                onChange={(e) => {
-                  setFormat(e.target.value);
-                  setConverted(null); // Reset conversion on format change
-                }}
-                className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              >
-                <option value="image/jpeg">JPG</option>
-                <option value="image/png">PNG</option>
-              </select>
-            </div>
-            
-            {/* Quality Slider for JPG */}
-            {format === "image/jpeg" && (
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  JPG Quality
-                </label>
-                <input
-                  type="range"
-                  min="10"
-                  max="100"
-                  value={95} // Default quality for JPG
-                  onChange={() => { /* Not directly used for conversion logic here */ }}
-                  className="w-full"
-                  disabled // Placeholder for now
-                />
-                <div className="flex justify-between text-xs text-gray-500 mt-1">
-                  <span>Lower quality</span>
-                  <span>Higher quality</span>
-                </div>
-              </div>
+      <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
+        <div className="flex items-center gap-4">
+          <label htmlFor="format" className="text-sm font-medium text-gray-700">Convert To:</label>
+          <select
+            id="format"
+            value={format}
+            onChange={(e) => setFormat(e.target.value as 'jpg' | 'png')}
+            className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+          >
+            <option value="png">PNG</option>
+            <option value="jpg">JPG</option>
+          </select>
+        </div>
+        <div className="flex gap-2">
+          <button
+            onClick={handleConvert}
+            disabled={isLoading || !file}
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-1"
+          >
+            {isLoading ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <FileText className="w-4 h-4"/>
             )}
-          </div>
+            Convert
+          </button>
+          <button
+            onClick={handleClear}
+            className="px-4 py-2 bg-gray-300 text-white rounded-lg font-medium hover:bg-gray-400 transition-colors"
+          >
+            <XCircle className="w-4 h-4 mr-1"/> Clear All
+          </button>
+        </div>
+      </div>
 
-          {/* Convert Button */}
-          {!converted ? (
-            <button
-              onClick={handleConvert}
-              disabled={loading || !file}
-              className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
+      {convertedImageUrl && (
+        <div className="bg-gray-50 rounded-lg p-6 border border-gray-200 space-y-4">
+          <h3 className="text-lg font-semibold text-gray-900">Result</h3>
+          <div className="flex justify-center mt-4">
+            <img src={convertedImageUrl} alt={`Converted Image Preview (${format})`} className="max-h-64 rounded-lg border max-w-full"/>
+          </div>
+          <div className="flex justify-center mt-4">
+            <button 
+              onClick={handleDownload} 
+              className="px-4 py-2 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 transition-colors flex items-center gap-1"
             >
-              {loading ? (
-                <>
-                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                  Converting...
-                </>
-              ) : (
-                <>
-                  <RefreshCcw className="w-5 h-5" />
-                  Convert Image
-                </>
-              )}
+              <Download className="w-4 h-4"/> Download {format.toUpperCase()}
             </button>
-          ) : (
-            <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-              <div className="flex items-center gap-2 text-green-800 mb-3">
-                <span className="font-medium">Conversion complete!</span>
-              </div>
-              
-              <div className="flex items-center justify-between">
-                <p className="text-green-700 font-medium">
-                  Converted size: {convertedSizeFormatted}
-                </p>
-                <button
-                  onClick={handleDownload}
-                  className="bg-green-600 text-white py-2 px-4 rounded-lg font-medium hover:bg-green-700 transition-colors flex items-center gap-2"
-                >
-                  <Download className="w-4 h-4" />
-                  Download
-                </button>
-              </div>
-            </div>
-          )}
+          </div>
         </div>
       )}
 
-      {/* Related Tools */}
       <div className="border-t border-gray-200 pt-6 mt-8">
         <h4 className="text-sm font-medium text-gray-700 mb-3">Related Tools</h4>
         <div className="flex flex-wrap gap-2">
           <a href="/image-compressor" className="text-sm text-blue-600 hover:underline">Image Compressor</a>
-          <span className="text-gray-300">|</span>
           <a href="/image-resizer" className="text-sm text-blue-600 hover:underline">Image Resizer</a>
         </div>
       </div>
     </div>
+  );
+}
+
+export default function Page() {
+  return (
+    <ToolLayout
+      title="Image Converter"
+      description="Convert images between formats. JPG to PNG, PNG to JPG, and more. Free, fast, and client-side."
+      category="Image Tools"
+    >
+      <ImageConverterClient />
+    </ToolLayout>
   );
 }

@@ -1,223 +1,191 @@
-import { useState, useCallback } from "react";
-import { Download, Scaling, Lock, Unlock } from "lucide-react";
-import FileDropZone from "../components/FileDropZone";
-import { resizeImage, formatFileSize } from "../lib/imageUtils";
+"use client";
 
-interface ResizerClientProps {
-  // Props if needed, though currently self-contained
-}
+import { useState } from "react";
+import ToolLayout from "../components/ToolLayout";
+import TextAreaTool from "../components/TextAreaTool";
+import { resizeImage } from "../lib/imageUtils";
+import { Copy, RefreshCcw, FileText, XCircle, Check, Loader2, Download, Image as ImageIcon } from "lucide-react";
+import toast from 'react-hot-toast';
 
-export default function ResizerClient() {
+function ImageResizerClient() {
   const [file, setFile] = useState<File | null>(null);
-  const [width, setWidth] = useState<string | number>("");
-  const [height, setHeight] = useState<string | number>("");
-  const [maintainAspect, setMaintainAspect] = useState(true);
-  const [resized, setResized] = useState<Blob | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-  const [originalDimensions, setOriginalDimensions] = useState<{width: number, height: number} | null>(null);
-
-  const handleFileSelect = useCallback((selectedFile: File) => {
-    setFile(selectedFile);
-    setResized(null);
-    setPreviewUrl(URL.createObjectURL(selectedFile));
-    
-    // Get original dimensions
-    const img = new Image();
-    img.onload = () => {
-      setOriginalDimensions({ width: img.width, height: img.height });
-      setWidth(img.width);
-      setHeight(img.height);
-    };
-    img.src = URL.createObjectURL(selectedFile);
-  }, []);
+  const [width, setWidth] = useState(0);
+  const [height, setHeight] = useState(0);
+  const [aspectRatioLocked, setAspectRatioLocked] = useState(true);
+  const [resizedImageUrl, setResizedImageUrl] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleResize = async () => {
-    if (!file || !width || !height) return;
-    
-    setLoading(true);
+    if (!file || (width <= 0 && height <= 0)) return;
+    setIsLoading(true);
     try {
-      const result = await resizeImage(file, Number(width), Number(height), maintainAspect);
-      setResized(result);
+      const resizedBlob = await resizeImage(file, width, height);
+      const url = URL.createObjectURL(resizedBlob);
+      setResizedImageUrl(url);
+      toast.success('Image resized successfully!');
     } catch (error: any) {
-      alert(`Failed to resize image: ${error.message}`);
+      toast.error(`Error resizing image: ${error.message}`);
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
 
   const handleDownload = () => {
-    if (!resized || !file) return;
-    
-    const url = URL.createObjectURL(resized);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `resized-${file.name}`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    if (!resizedImageUrl) return;
+    const link = document.createElement('a');
+    link.href = resizedImageUrl;
+    link.download = `resized_${file?.name || 'image'}`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    toast.success('Image downloaded!');
   };
 
-  const compressionRatio = compressed
-    ? ((1 - compressed.compressedSize / compressed.originalSize) * 100).toFixed(1)
-    : 0;
+  const handleClear = () => {
+    setFile(null);
+    setWidth(0);
+    setHeight(0);
+    setResizedImageUrl(null);
+    if (resizedImageUrl) URL.revokeObjectURL(resizedImageUrl);
+  };
 
-  const originalSizeFormatted = file ? formatFileSize(file.size) : 'N/A';
-  const resizedSizeFormatted = resized ? formatFileSize(resized.size) : 'N/A';
+  const handleFileChange = (selectedFile: File | null) => {
+    if (selectedFile) {
+      setFile(selectedFile);
+      const img = new Image();
+      img.onload = () => {
+        setWidth(img.width);
+        setHeight(img.height);
+      };
+      img.src = URL.createObjectURL(selectedFile);
+    }
+  };
+
+  const handleWidthChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newWidth = parseInt(e.target.value, 10);
+    if (aspectRatioLocked && file) {
+      const img = new Image();
+      img.onload = () => {
+        const aspectRatio = img.width / img.height;
+        setHeight(Math.round(newWidth / aspectRatio));
+      };
+      img.src = URL.createObjectURL(file);
+    }
+    setWidth(newWidth);
+  };
+
+  const handleHeightChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newHeight = parseInt(e.target.value, 10);
+    if (aspectRatioLocked && file) {
+      const img = new Image();
+      img.onload = () => {
+        const aspectRatio = img.height / img.width;
+        setWidth(Math.round(newHeight / aspectRatio));
+      };
+      img.src = URL.createObjectURL(file);
+    }
+    setHeight(newHeight);
+  };
+
+  const originalFileName = file ? file.name : 'No file selected';
 
   return (
     <div className="space-y-6">
-      {!file ? (
-        <FileDropZone
-          onFileSelect={handleFileSelect}
-          accept="image/*"
-          maxSize={10}
-          label="Drop your image here, or click to browse"
-        />
-      ) : (
-        <div className="space-y-6">
-          {/* Preview */}
-          <div className="bg-gray-50 rounded-lg p-4">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="font-medium text-gray-900">Selected Image</h3>
-              <button
-                onClick={() => {
-                  setFile(null);
-                  setResized(null);
-                  if (previewUrl) URL.revokeObjectURL(previewUrl);
-                  setPreviewUrl(null);
-                  setOriginalDimensions(null);
-                  setWidth("");
-                  setHeight("");
-                }}
-                className="text-sm text-red-600 hover:text-red-700"
-              >
-                Remove
-              </button>
-            </div>
-            
-            {previewUrl && (
-              <div className="flex items-start gap-4">
-                <img
-                  src={previewUrl}
-                  alt="Preview"
-                  className="max-h-48 rounded-lg object-contain bg-gray-100"
-                />
-                <div className="flex-1">
-                  <p className="text-sm text-gray-600">
-                    <span className="font-medium">File:</span> {file.name}
-                  </p>
-                  <p className="text-sm text-gray-600">
-                    <span className="font-medium">Original size:</span>{" "}
-                    {originalSizeFormatted}
-                  </p>
-                  {originalDimensions && (
-                    <p className="text-sm text-gray-600">
-                      <span className="font-medium">Dimensions:</span> {originalDimensions.width} x {originalDimensions.height}
-                    </p>
-                  )}
-                </div>
-              </div>
+      <TextAreaTool 
+        label="Image File"
+        value={originalFileName}
+        readOnly
+        rows={2}
+        placeholder="Drag and drop an image file here or click to upload"
+      />
+
+      <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
+        <div className="flex items-center gap-4">
+          <label htmlFor="width" className="text-sm font-medium text-gray-700">Width:</label>
+          <input
+            id="width"
+            type="number"
+            value={width}
+            onChange={handleWidthChange}
+            className="w-24 px-3 py-2 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500"
+          />
+          <button
+            onClick={() => setAspectRatioLocked(!aspectRatioLocked)}
+            className={`p-1 rounded-md ${aspectRatioLocked ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-700'}`}
+          >
+            {aspectRatioLocked ? (
+              <ImageIcon className="w-5 h-5" />
+            ) : (
+              <ImageIcon className="w-5 h-5" />
             )}
-          </div>
+          </button>
+          <label htmlFor="height" className="text-sm font-medium text-gray-700">Height:</label>
+          <input
+            id="height"
+            type="number"
+            value={height}
+            onChange={handleHeightChange}
+            className="w-24 px-3 py-2 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500"
+          />
+        </div>
+        <div className="flex gap-2">
+          <button
+            onClick={handleResize}
+            disabled={isLoading || !file || (width <= 0 && height <= 0)}
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-1"
+          >
+            {isLoading ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <FileText className="w-4 h-4"/>
+            )}
+            Resize
+          </button>
+          <button
+            onClick={handleClear}
+            className="px-4 py-2 bg-gray-300 text-white rounded-lg font-medium hover:bg-gray-400 transition-colors"
+          >
+            <XCircle className="w-4 h-4 mr-1"/> Clear All
+          </button>
+        </div>
+      </div>
 
-          {/* Dimensions Inputs */}
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Width (px)
-              </label>
-              <input
-                type="number"
-                value={width}
-                onChange={(e) => setWidth(e.target.value)}
-                className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                placeholder="Width"
-                min="1"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Height (px)
-              </label>
-              <input
-                type="number"
-                value={height}
-                onChange={(e) => setHeight(e.target.value)}
-                className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                placeholder="Height"
-                min="1"
-              />
-            </div>
+      {resizedImageUrl && (
+        <div className="bg-gray-50 rounded-lg p-6 border border-gray-200 space-y-4">
+          <h3 className="text-lg font-semibold text-gray-900">Result</h3>
+          <div className="flex justify-center mt-4">
+            <img src={resizedImageUrl} alt="Resized Image Preview" className="max-h-64 rounded-lg border max-w-full"/>
           </div>
-
-          {/* Aspect Ratio Toggle */}
-          <div className="flex items-center gap-3">
-            <button
-              onClick={() => setMaintainAspect(!maintainAspect)}
-              className="flex items-center gap-2 text-sm text-gray-700 hover:text-gray-900"
+          <div className="flex justify-center mt-4">
+            <button 
+              onClick={handleDownload} 
+              className="px-4 py-2 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 transition-colors flex items-center gap-1"
             >
-              {maintainAspect ? (
-                <Lock className="w-4 h-4 text-blue-600" />
-              ) : (
-                <Unlock className="w-4 h-4 text-gray-400" />
-              )}
-              <span>Maintain aspect ratio</span>
+              <Download className="w-4 h-4"/> Download Resized
             </button>
           </div>
-
-          {/* Resize Button */}
-          {!resized ? (
-            <button
-              onClick={handleResize}
-              disabled={loading || !file || !width || !height}
-              className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
-            >
-              {loading ? (
-                <>
-                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                  Resizing...
-                </>
-              ) : (
-                <>
-                  <Scaling className="w-5 h-5" />
-                  Resize Image
-                </>
-              )}
-            </button>
-          ) : (
-            <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-              <div className="flex items-center gap-2 text-green-800 mb-3">
-                <span className="font-medium">Image resized successfully!</span>
-              </div>
-              
-              <div className="flex items-center justify-between">
-                <p className="text-green-700 font-medium">
-                  Resized size: {resizedSizeFormatted}
-                </p>
-                <button
-                  onClick={handleDownload}
-                  className="bg-green-600 text-white py-2 px-4 rounded-lg font-medium hover:bg-green-700 transition-colors flex items-center gap-2"
-                >
-                  <Download className="w-4 h-4" />
-                  Download
-                </button>
-              </div>
-            </div>
-          )}
         </div>
       )}
 
-      {/* Related Tools */}
       <div className="border-t border-gray-200 pt-6 mt-8">
         <h4 className="text-sm font-medium text-gray-700 mb-3">Related Tools</h4>
         <div className="flex flex-wrap gap-2">
           <a href="/image-compressor" className="text-sm text-blue-600 hover:underline">Image Compressor</a>
-          <span className="text-gray-300">|</span>
           <a href="/image-converter" className="text-sm text-blue-600 hover:underline">Image Converter</a>
         </div>
       </div>
     </div>
+  );
+}
+
+export default function Page() {
+  return (
+    <ToolLayout
+      title="Image Resizer"
+      description="Resize images to exact dimensions. Maintain aspect ratio or set custom width and height. Free, fast, and client-side."
+      category="Image Tools"
+    >
+      <ImageResizerClient />
+    </ToolLayout>
   );
 }

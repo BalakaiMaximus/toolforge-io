@@ -1,30 +1,9 @@
-import { Metadata } from "next";
-import ToolLayout from "../components/ToolLayout";
-import TextAreaTool from "../components/TextAreaTool";
-import { countWords, countChars, estimateReadingTime } from "../lib/textUtils";
-
-export const metadata: Metadata = {
-  title: "Word Counter - Count Words & Characters Online | ToolForge",
-  description:
-    "Count words, characters, and estimate reading time for your text. Free, fast, and client-side tool for writers and editors.",
-  keywords: "word counter, character count, reading time, text analysis",
-};
-
-export default function WordCounterPage() {
-  return (
-    <ToolLayout
-      title="Word Counter"
-      description="Analyze your text: count words, characters, lines, and estimate reading time. Paste your text below to get instant statistics."
-      category="Text Tools"
-    >
-      <WordCounterClient />
-    </ToolLayout>
-  );
-}
-
 "use client";
 
 import { useState, useMemo } from "react";
+import ToolLayout from "../components/ToolLayout";
+import TextAreaTool from "../components/TextAreaTool";
+import { countWords, countChars, estimateReadingTime } from "../lib/textUtils";
 
 function WordCounterClient() {
   const [text, setText] = useState("");
@@ -71,7 +50,6 @@ function WordCounterClient() {
         </div>
       </div>
 
-      {/* Related Tools */}
       <div className="border-t border-gray-200 pt-6 mt-8">
         <h4 className="text-sm font-medium text-gray-700 mb-3">Related Tools</h4>
         <div className="flex flex-wrap gap-2">
@@ -79,5 +57,17 @@ function WordCounterClient() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function Page() {
+  return (
+    <ToolLayout
+      title="Word Counter"
+      description="Analyze your text: count words, characters, lines, and estimate reading time. Paste your text below to get instant statistics."
+      category="Text Tools"
+    >
+      <WordCounterClient />
+    </ToolLayout>
   );
 }

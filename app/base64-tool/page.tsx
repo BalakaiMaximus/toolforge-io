@@ -1,29 +1,11 @@
-import { Metadata } from "next";
+"use client";
+
+import { useState, useMemo } from "react";
 import ToolLayout from "../components/ToolLayout";
 import TextAreaTool from "../components/TextAreaTool";
-import { encodeBase64, decodeBase64, isValidUUID, generateUUID, generateUUIDs } from "../lib/devUtils";
-import { useState } from "react";
-import { Copy, RefreshCcw, Plus, X, Loader2, FileText } from "lucide-react";
+import { encodeBase64, decodeBase64, generateUUIDs } from "../lib/devUtils";
+import { Copy, Plus, Loader2, FileText } from "lucide-react";
 import toast from 'react-hot-toast';
-
-export const metadata: Metadata = {
-  title: "Base64 Encoder/Decoder & UUID Generator | ToolForge",
-  description:
-    "Encode and decode text using Base64. Generate UUID v4 identifiers easily. Free, fast, and client-side.",
-  keywords: "base64 encoder, base64 decoder, uuid generator, uuid v4, text encoding",
-};
-
-export default function Base64AndUUIDPage() {
-  return (
-    <ToolLayout
-      title="Base64 & UUID Tools"
-      description="Encode/decode text with Base64, generate UUIDs. Essential tools for developers."
-      category="Developer Tools"
-    >
-      <Base64AndUUIDClient />
-    </ToolLayout>
-  );
-}
 
 function Base64AndUUIDClient() {
   const [base64Input, setBase64Input] = useState("");
@@ -40,7 +22,7 @@ function Base64AndUUIDClient() {
       setIsLoading(true);
       const encoded = encodeBase64(base64Input);
       setEncodedBase64(encoded);
-      setDecodedText(""); // Clear decode output
+      setDecodedText("");
       toast.success("Encoded successfully!");
     } catch (error: any) {
       setEncodedBase64("");
@@ -55,7 +37,7 @@ function Base64AndUUIDClient() {
       setIsLoading(true);
       const decoded = decodeBase64(base64Input);
       setDecodedText(decoded);
-      setEncodedBase64(""); // Clear encode output
+      setEncodedBase64("");
       toast.success("Decoded successfully!");
     } catch (error: any) {
       setDecodedText("");
@@ -84,7 +66,6 @@ function Base64AndUUIDClient() {
 
   return (
     <div className="space-y-6">
-      {/* Base64 Tool */}
       <div className="space-y-4">
         <h3 className="text-lg font-semibold text-gray-900 flex items-center justify-between">
           Base64 Encoder/Decoder
@@ -111,7 +92,7 @@ function Base64AndUUIDClient() {
             {isLoading && activeBase64Tab === 'encode' ? (
               <Loader2 className="w-4 h-4 animate-spin mr-1" />
             ) : (
-              <Copy className="w-4 h-4 mr-1" />
+              <FileText className="w-4 h-4 mr-1" />
             )}
             Encode to Base64
           </button>
@@ -123,7 +104,7 @@ function Base64AndUUIDClient() {
             {isLoading && activeBase64Tab === 'decode' ? (
               <Loader2 className="w-4 h-4 animate-spin mr-1" />
             ) : (
-              <Copy className="w-4 h-4 mr-1" />
+              <FileText className="w-4 h-4" />
             )}
             Decode Base64
           </button>
@@ -154,7 +135,6 @@ function Base64AndUUIDClient() {
 
       <hr className="my-6 border-gray-200" />
 
-      {/* UUID Generator */}
       <div className="space-y-4">
         <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
           UUID Generator
@@ -189,7 +169,7 @@ function Base64AndUUIDClient() {
         {uuids.length > 0 && (
           <div className="bg-gray-50 rounded-lg p-4 border border-gray-200 space-y-2">
             <h4 className="text-md font-medium text-gray-900">Generated UUIDs</h4>
-            <div className="grid grid-cols-1 md:grid-grid-cols-2 gap-2">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
               {uuids.map((uuid, index) => (
                 <div key={index} className="relative">
                   <textarea
@@ -211,7 +191,6 @@ function Base64AndUUIDClient() {
         )}
       </div>
 
-      {/* Related Tools */}
       <div className="border-t border-gray-200 pt-6 mt-8">
         <h4 className="text-sm font-medium text-gray-700 mb-3">Related Tools</h4>
         <div className="flex flex-wrap gap-2">
@@ -219,5 +198,17 @@ function Base64AndUUIDClient() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function Page() {
+  return (
+    <ToolLayout
+      title="Base64 & UUID Tools"
+      description="Encode/decode text with Base64, generate UUIDs. Essential tools for developers."
+      category="Developer Tools"
+    >
+      <Base64AndUUIDClient />
+    </ToolLayout>
   );
 }

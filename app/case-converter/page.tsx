@@ -1,30 +1,17 @@
-import { Metadata } from "next";
+"use client";
+
+import { useState, useMemo } from "react";
 import ToolLayout from "../components/ToolLayout";
 import TextAreaTool from "../components/TextAreaTool";
 import { toUpperCase, toLowerCase, toCamelCase, toSnakeCase, toKebabCase, toTitleCase } from "../lib/textUtils";
+import { Copy } from "lucide-react";
 
-export const metadata: Metadata = {
+export const metadata = {
   title: "Case Converter - Convert Text Cases Online | ToolForge",
   description:
     "Convert text to uppercase, lowercase, camelCase, snake_case, and kebab-case. Easy and fast online case conversion.",
   keywords: "case converter, text case, uppercase, lowercase, camelcase, snakecase, kebab case, title case",
 };
-
-export default function CaseConverterPage() {
-  return (
-    <ToolLayout
-      title="Case Converter"
-      description="Convert text between various case formats. Useful for programming, writing, and data formatting."
-      category="Text Tools"
-    >
-      <CaseConverterClient />
-    </ToolLayout>
-  );
-}
-
-"use client";
-
-import { useState, useMemo } from "react";
 
 function CaseConverterClient() {
   const [text, setText] = useState("");
@@ -52,6 +39,7 @@ function CaseConverterClient() {
   }, [text]);
 
   const handleCopy = (textToCopy: string) => {
+    if (!textToCopy) return;
     navigator.clipboard.writeText(textToCopy);
     alert("Copied to clipboard!");
   };
@@ -81,7 +69,7 @@ function CaseConverterClient() {
                 className="w-full px-3 py-2 rounded-lg border border-gray-300 bg-gray-50 focus:outline-none font-mono text-sm"
               />
               <button
-                onClick={() => handleCopy(item.value, item.label)}
+                onClick={() => handleCopy(item.value)}
                 className="absolute top-1 right-1 px-2 py-1 bg-blue-600 text-white rounded-md text-xs hover:bg-blue-700 transition"
               >
                 Copy
@@ -91,7 +79,6 @@ function CaseConverterClient() {
         ))}
       </div>
 
-      {/* Related Tools */}
       <div className="border-t border-gray-200 pt-6 mt-8">
         <h4 className="text-sm font-medium text-gray-700 mb-3">Related Tools</h4>
         <div className="flex flex-wrap gap-2">
@@ -99,5 +86,17 @@ function CaseConverterClient() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function Page() {
+  return (
+    <ToolLayout
+      title="Case Converter"
+      description="Convert text between various case formats. Useful for programming, writing, and data formatting."
+      category="Text Tools"
+    >
+      <CaseConverterClient />
+    </ToolLayout>
   );
 }

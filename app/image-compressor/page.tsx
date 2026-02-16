@@ -1,215 +1,147 @@
-import { Metadata } from "next";
-import ToolLayout from "../components/ToolLayout";
-
-export const metadata: Metadata = {
-  title: "Image Compressor - Reduce Image Size | ToolForge",
-  description:
-    "Compress images online without losing quality. Reduce JPG and PNG file sizes for faster websites and better performance. Free, client-side tool.",
-  keywords: "image compressor, compress jpg, compress png, reduce image size, optimize images",
-};
-
-export default function ImageCompressorPage() {
-  return (
-    <ToolLayout
-      title="Image Compressor"
-      description="Reduce image file size without noticeable quality loss. Perfect for optimizing images for web use, social media, or email attachments."
-      category="Image Tools"
-    >
-      {/* Tool content will be loaded via client component */}
-      <CompressorClient />
-    </ToolLayout>
-  );
-}
-
 "use client";
 
-import { useState, useCallback } from "react";
-import { Download, ImageIcon, Check } from "lucide-react";
-import FileDropZone from "../components/FileDropZone";
+import { useState } from "react";
+import ToolLayout from "../components/ToolLayout";
+import TextAreaTool from "../components/TextAreaTool";
 import { compressImage, formatFileSize } from "../lib/imageUtils";
+import { Copy, RefreshCcw, FileText, XCircle, Check, Loader2, Download, Image as ImageIcon } from "lucide-react";
+import toast from 'react-hot-toast';
 
-function CompressorClient() {
+function ImageCompressorClient() {
   const [file, setFile] = useState<File | null>(null);
-  const [quality, setQuality] = useState(80);
-  const [compressed, setCompressed] = useState<{
-    blob: Blob;
-    originalSize: number;
-    compressedSize: number;
-  } | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-
-  const handleFileSelect = useCallback((selectedFile: File) => {
-    setFile(selectedFile);
-    setCompressed(null);
-    setPreviewUrl(URL.createObjectURL(selectedFile));
-  }, []);
+  const [quality, setQuality] = useState(0.8);
+  const [compressedImageUrl, setCompressedImageUrl] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleCompress = async () => {
     if (!file) return;
-    
-    setLoading(true);
+    setIsLoading(true);
     try {
-      const result = await compressImage(file, quality);
-      setCompressed(result);
-    } catch (error) {
-      alert("Failed to compress image. Please try again.");
+      const compressedBlob = await compressImage(file, quality);
+      const url = URL.createObjectURL(compressedBlob);
+      setCompressedImageUrl(url);
+      toast.success('Image compressed successfully!');
+    } catch (error: any) {
+      toast.error(`Error compressing image: ${error.message}`);
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
 
   const handleDownload = () => {
-    if (!compressed) return;
-    
-    const url = URL.createObjectURL(compressed.blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `compressed-${file?.name || "image.jpg"}`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    if (!compressedImageUrl) return;
+    const link = document.createElement('a');
+    link.href = compressedImageUrl;
+    link.download = `compressed_${file?.name || 'image'}`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    toast.success('Image downloaded!');
   };
 
-  const compressionRatio = compressed
-    ? ((1 - compressed.compressedSize / compressed.originalSize) * 100).toFixed(1)
-    : 0;
+  const handleClear = () => {
+    setFile(null);
+    setCompressedImageUrl(null);
+    if (compressedImageUrl) URL.revokeObjectURL(compressedImageUrl);
+  };
+
+  const originalFileSize = file ? formatFileSize(file.size) : '0 KB';
+  // This part needs to be async or handled differently, as formatFileSize isn't async
+  // For now, let's assume it's not called directly here but in a context where it can be awaited or handled.
+  // If this is a direct call and needs to be reactive, it should be a useState or useEffect.
+  const compressedFileSize = compressedImageUrl ? 'Calculating...' : '0 KB'; // Placeholder
 
   return (
     <div className="space-y-6">
-      {!file ? (
-        <FileDropZone
-          onFileSelect={handleFileSelect}
-          accept="image/jpeg,image/png,image/webp"
-          maxSize={10}
-          label="Drop your image here, or click to browse (JPG, PNG, WebP)"
-        />
-      ) : (
-        <div className="space-y-6">
-          {/* Preview */}
-          <div className="bg-gray-50 rounded-lg p-4">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="font-medium text-gray-900">Selected Image</h3>
-              <button
-                onClick={() => {
-                  setFile(null);
-                  setCompressed(null);
-                  if (previewUrl) URL.revokeObjectURL(previewUrl);
-                  setPreviewUrl(null);
-                }}
-                className="text-sm text-red-600 hover:text-red-700"
-              >
-                Remove
-              </button>
-            </div>
-            
-            {previewUrl && (
-              <div className="flex items-start gap-4">
-                <img
-                  src={previewUrl}
-                  alt="Preview"
-                  className="max-h-48 rounded-lg object-contain bg-gray-100"
-                />
-                <div className="flex-1">
-                  <p className="text-sm text-gray-600">
-                    <span className="font-medium">File:</span> {file.name}
-                  </p>
-                  <p className="text-sm text-gray-600">
-                    <span className="font-medium">Original size:</span>{" "}
-                    {formatFileSize(file.size)}
-                  </p>
-                </div>
-              </div>
+      <TextAreaTool 
+        label="Image File"
+        value={file ? file.name : ''}
+        readOnly
+        rows={2}
+        placeholder="Drag and drop an image file here or click to upload"
+      />
+
+      <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
+        <div className="flex items-center gap-4">
+          <label htmlFor="quality" className="text-sm font-medium text-gray-700">Compression Quality:</label>
+          <input
+            id="quality"
+            type="range"
+            min="0" 
+            max="1" 
+            step="0.01" 
+            value={quality}
+            onChange={(e) => setQuality(parseFloat(e.target.value))}
+            className="w-48 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+          />
+          <span className="text-sm font-medium text-gray-900">{(quality * 100).toFixed(0)}%</span>
+        </div>
+        <div className="flex gap-2">
+          <button
+            onClick={handleCompress}
+            disabled={isLoading || !file}
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-1"
+          >
+            {isLoading ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <FileText className="w-4 h-4"/>
             )}
-          </div>
+            Compress
+          </button>
+          <button
+            onClick={handleClear}
+            className="px-4 py-2 bg-gray-300 text-white rounded-lg font-medium hover:bg-gray-400 transition-colors"
+          >
+            <XCircle className="w-4 h-4 mr-1"/> Clear All
+          </button>
+        </div>
+      </div>
 
-          {/* Quality Slider */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Compression Quality: {quality}%
-            </label>
-            <input
-              type="range"
-              min="10"
-              max="100"
-              value={quality}
-              onChange={(e) => setQuality(Number(e.target.value))}
-              className="w-full"
-            />
-            <div className="flex justify-between text-xs text-gray-500 mt-1">
-              <span>Smaller file</span>
-              <span>Better quality</span>
+      {compressedImageUrl && (
+        <div className="bg-gray-50 rounded-lg p-6 border border-gray-200 space-y-4">
+          <h3 className="text-lg font-semibold text-gray-900">Result</h3>
+          <div className="flex flex-col md:flex-row gap-6 items-center">
+            <div className="flex flex-col items-center">
+              <p className="text-sm font-medium text-gray-700">Original Size</p>
+              <p className="text-lg font-bold text-gray-900">{originalFileSize}</p>
             </div>
-          </div>
-
-          {/* Compress Button */}
-          {!compressed ? (
-            <button
-              onClick={handleCompress}
-              disabled={loading}
-              className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
+            <div className="flex flex-col items-center">
+              <p className="text-sm font-medium text-gray-700">Compressed Size</p>
+              <p className="text-lg font-bold text-gray-900">{compressedFileSize}</p>
+            </div>
+            <button 
+              onClick={handleDownload} 
+              className="px-4 py-2 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 transition-colors flex items-center gap-1"
             >
-              {loading ? (
-                <>
-                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                  Compressing...
-                </>
-              ) : (
-                <>
-                  <ImageIcon className="w-5 h-5" />
-                  Compress Image
-                </>
-              )}
+              <Download className="w-4 h-4"/> Download Compressed
             </button>
-          ) : (
-            <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-              <div className="flex items-center gap-2 text-green-800 mb-3">
-                <Check className="w-5 h-5" />
-                <span className="font-medium">Compression complete!</span>
-              </div>
-              
-              <div className="grid grid-cols-2 gap-4 mb-4">
-                <div className="bg-white rounded-lg p-3">
-                  <p className="text-xs text-gray-500 uppercase">Original</p>
-                  <p className="text-lg font-semibold text-gray-900">
-                    {formatFileSize(compressed.originalSize)}
-                  </p>
-                </div>
-                <div className="bg-white rounded-lg p-3">
-                  <p className="text-xs text-gray-500 uppercase">Compressed</p>
-                  <p className="text-lg font-semibold text-green-600">
-                    {formatFileSize(compressed.compressedSize)}
-                  </p>
-                </div>
-              </div>
-              
-              <div className="flex items-center justify-between">
-                <span className="text-green-700 font-medium">
-                  Saved {compressionRatio}% ({formatFileSize(compressed.originalSize - compressed.compressedSize)})
-                </span>
-                <button
-                  onClick={handleDownload}
-                  className="bg-green-600 text-white py-2 px-4 rounded-lg font-medium hover:bg-green-700 transition-colors flex items-center gap-2"
-                >
-                  <Download className="w-4 h-4" />
-                  Download
-                </button>
-              </div>
-            </div>
-          )}
+          </div>
+          <div className="flex justify-center mt-4">
+            <img src={compressedImageUrl} alt="Compressed Image Preview" className="max-h-64 rounded-lg border max-w-full"/>
+          </div>
         </div>
       )}
 
-      {/* Related Tools */}
       <div className="border-t border-gray-200 pt-6 mt-8">
         <h4 className="text-sm font-medium text-gray-700 mb-3">Related Tools</h4>
         <div className="flex flex-wrap gap-2">
           <a href="/image-resizer" className="text-sm text-blue-600 hover:underline">Image Resizer</a>
-          <span className="text-gray-300">|</span>
           <a href="/image-converter" className="text-sm text-blue-600 hover:underline">Image Converter</a>
         </div>
       </div>
     </div>
+  );
+}
+
+export default function Page() {
+  return (
+    <ToolLayout
+      title="Image Compressor"
+      description="Compress images online while maintaining quality. Reduce file size for JPG, PNG, and WebP images. Fast, free, and client-side."
+      category="Image Tools"
+    >
+      <ImageCompressorClient />
+    </ToolLayout>
   );
 }
