@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import TextAreaTool from "../TextAreaTool";
+import TextAreaTool from "../components/TextAreaTool";
 import { toUpperCase, toLowerCase, toCamelCase, toSnakeCase, toKebabCase, toTitleCase } from "../lib/textUtils";
 import { Copy } from "lucide-react";
 

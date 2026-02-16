@@ -4,7 +4,7 @@ import {
   ImageIcon,
   Type,
   Code,
-  Compress,
+  Minimize2,
   Scaling,
   FileType,
   Hash,
@@ -27,7 +27,7 @@ const tools = [
         description:
           "Reduce image file size without losing quality. Supports JPG and PNG formats with adjustable compression levels.",
         href: "/image-compressor",
-        icon: Compress,
+        icon: Minimize2,
       },
       {
         title: "Image Resizer",
