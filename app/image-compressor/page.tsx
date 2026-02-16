@@ -17,8 +17,8 @@ function ImageCompressorClient() {
     if (!file) return;
     setIsLoading(true);
     try {
-      const compressedBlob = await compressImage(file, quality);
-      const url = URL.createObjectURL(compressedBlob);
+      const result = await compressImage(file, quality);
+      const url = URL.createObjectURL(result.blob);
       setCompressedImageUrl(url);
       toast.success('Image compressed successfully!');
     } catch (error: any) {
