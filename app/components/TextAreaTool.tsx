@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 
 interface TextAreaToolProps {
   value: string;
-  onChange: (value: string) => void;
+  onChange?: (value: string) => void;
   placeholder?: string;
   label?: string;
   readOnly?: boolean;
@@ -46,7 +46,7 @@ export default function TextAreaTool({
       
       <textarea
         value={value}
-        onChange={(e) => onChange(e.target.value)}
+        onChange={(e) => onChange?.(e.target.value)}
         placeholder={placeholder}
         readOnly={readOnly}
         rows={rows}
