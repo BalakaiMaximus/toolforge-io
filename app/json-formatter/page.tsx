@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState } from "react";
 import ToolLayout from "../components/ToolLayout";
 import TextAreaTool from "../components/TextAreaTool";
 import { formatJSON, minifyJSON, validateJSON } from "../lib/devUtils";

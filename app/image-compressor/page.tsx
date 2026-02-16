@@ -46,9 +46,6 @@ function ImageCompressorClient() {
   };
 
   const originalFileSize = file ? formatFileSize(file.size) : '0 KB';
-  // This part needs to be async or handled differently, as formatFileSize isn't async
-  // For now, let's assume it's not called directly here but in a context where it can be awaited or handled.
-  // If this is a direct call and needs to be reactive, it should be a useState or useEffect.
   const compressedFileSize = compressedImageUrl ? 'Calculating...' : '0 KB'; // Placeholder
 
   return (
