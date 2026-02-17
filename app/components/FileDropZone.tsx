@@ -1,6 +1,6 @@
 "use client";
 
-import { X, FileImage } from "lucide-react";
+import { X, FileImage, Upload } from "lucide-react";
 import { useCallback, useState, useRef } from "react";
 
 interface FileDropZoneProps {
@@ -14,7 +14,7 @@ export default function FileDropZone({
   onFileSelect,
   accept = "image/*",
   maxSize = 10,
-  label = "Drop your file here, or click to browse",
+  label = "Click to upload an image",
 }: FileDropZoneProps) {
   const [isDragging, setIsDragging] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -28,7 +28,6 @@ export default function FileDropZone({
       return false;
     }
     
-    // Check if file is an image
     if (!file.type.startsWith('image/')) {
       setError('Please select an image file.');
       return false;
@@ -40,6 +39,19 @@ export default function FileDropZone({
   const handleFile = (file: File) => {
     if (validateFile(file)) {
       onFileSelect(file);
+    }
+  };
+
+  const handleButtonClick = () => {
+    // Direct click on hidden input - most reliable across browsers
+    inputRef.current?.click();
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      handleFile(file);
+      e.target.value = ''; // Reset for reselect
     }
   };
 
@@ -56,69 +68,57 @@ export default function FileDropZone({
   const handleDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault();
     setIsDragging(false);
-    
     const file = e.dataTransfer.files[0];
-    if (file) {
-      handleFile(file);
-    }
+    if (file) handleFile(file);
   }, []);
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      handleFile(file);
-      // Reset input so same file can be selected again
-      e.target.value = '';
-    }
-  };
-
   return (
-    <div
-      onDragOver={handleDragOver}
-      onDragLeave={handleDragLeave}
-      onDrop={handleDrop}
-      className={`
-        relative border-2 border-dashed rounded-xl text-center transition-all duration-200
-        min-h-[200px] flex flex-col items-center justify-center overflow-hidden
-        active:scale-[0.98] touch-manipulation
-        ${isDragging 
-          ? "border-blue-500 bg-blue-50" 
-          : "border-gray-300 hover:border-gray-400 bg-gray-50 active:bg-gray-100"
-        }
-      `}
-    >
-      {/* Native file input - positioned absolutely to cover entire area */}
+    <div className="space-y-3">
+      {/* Hidden native input */}
       <input
+        ref={inputRef}
         type="file"
         accept={accept}
         onChange={handleInputChange}
-        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
-        style={{ fontSize: '16px' }} /* Prevents iOS zoom */
+        className="hidden"
         aria-label="Select image file"
       />
       
-      {/* Visual content */}
-      <div className="flex flex-col items-center gap-3 pointer-events-none px-6 py-8">
+      {/* Clickable area - works as button */}
+      <button
+        type="button"
+        onClick={handleButtonClick}
+        onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
+        onDrop={handleDrop}
+        className={`
+          w-full border-2 border-dashed rounded-xl p-8 text-center transition-all duration-200
+          min-h-[180px] flex flex-col items-center justify-center gap-4
+          active:scale-[0.98] touch-manipulation
+          focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2
+          ${isDragging 
+            ? "border-blue-500 bg-blue-50 border-solid" 
+            : "border-gray-300 hover:border-gray-400 bg-gray-50 hover:bg-gray-100"
+          }
+        `}
+      >
         <div className={`
-          w-16 h-16 rounded-full flex items-center justify-center transition-colors shadow-sm
-          ${isDragging ? "bg-blue-100" : "bg-white"}
+          w-14 h-14 rounded-full flex items-center justify-center transition-colors
+          ${isDragging ? "bg-blue-100" : "bg-white shadow-sm"}
         `}>
-          <FileImage className="w-8 h-8 text-gray-400" />
+          <Upload className="w-6 h-6 text-gray-500" />
         </div>
         
         <div>
-          <p className="text-gray-700 font-medium mb-1 text-sm sm:text-base">{label}</p>
-          <p className="text-xs sm:text-sm text-gray-500">
-            Click to browse or take a photo
-          </p>
-          <p className="text-xs text-gray-400 mt-1">
-            Maximum file size: {maxSize}MB
+          <p className="text-gray-700 font-medium text-base">{label}</p>
+          <p className="text-sm text-gray-500 mt-1">
+            Max size: {maxSize}MB
           </p>
         </div>
-      </div>
+      </button>
 
       {error && (
-        <div className="absolute bottom-4 left-4 right-4 flex items-center gap-2 text-red-600 text-sm bg-red-50 px-4 py-2 rounded-lg z-20 pointer-events-none">
+        <div className="flex items-center gap-2 text-red-600 text-sm bg-red-50 px-4 py-2 rounded-lg">
           <X className="w-4 h-4 flex-shrink-0" />
           <span>{error}</span>
         </div>
