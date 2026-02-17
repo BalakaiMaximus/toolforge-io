@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build && node fix-next.js",
-    "start": "next start",
+    "start": "serve dist -l $PORT",
     "test": "jest --watchAll=false --runInBand"
   },
   "dependencies": {
@@ -13,7 +13,8 @@
     "next": "15.1.7",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "react-hot-toast": "^2.6.0"
+    "react-hot-toast": "^2.6.0",
+    "serve": "^14.2.4"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.3",
