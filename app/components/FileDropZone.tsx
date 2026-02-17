@@ -1,7 +1,7 @@
 "use client";
 
-import { Upload, X, FileImage } from "lucide-react";
-import { useCallback, useState, useRef } from "react";
+import { X, FileImage } from "lucide-react";
+import { useCallback, useState } from "react";
 
 interface FileDropZoneProps {
   onFileSelect: (file: File) => void;
@@ -18,7 +18,6 @@ export default function FileDropZone({
 }: FileDropZoneProps) {
   const [isDragging, setIsDragging] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
 
   const validateFile = (file: File): boolean => {
     setError(null);
@@ -40,10 +39,6 @@ export default function FileDropZone({
   const handleFile = (file: File) => {
     if (validateFile(file)) {
       onFileSelect(file);
-      // Reset input so same file can be selected again
-      if (inputRef.current) {
-        inputRef.current.value = '';
-      }
     }
   };
 
@@ -71,12 +66,9 @@ export default function FileDropZone({
     const file = e.target.files?.[0];
     if (file) {
       handleFile(file);
+      // Reset input so same file can be selected again
+      e.target.value = '';
     }
-  };
-
-  // Mobile-friendly click handler
-  const handleClick = () => {
-    inputRef.current?.click();
   };
 
   return (
@@ -84,33 +76,32 @@ export default function FileDropZone({
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
-      onClick={handleClick}
       className={`
-        relative border-2 border-dashed rounded-xl p-8 text-center transition-all duration-200
-        cursor-pointer min-h-[180px] flex flex-col items-center justify-center
+        relative border-2 border-dashed rounded-xl text-center transition-all duration-200
+        min-h-[200px] flex flex-col items-center justify-center overflow-hidden
         active:scale-[0.98] touch-manipulation
         ${isDragging 
           ? "border-blue-500 bg-blue-50" 
           : "border-gray-300 hover:border-gray-400 bg-gray-50 active:bg-gray-100"
         }
       `}
-      role="button"
-      tabIndex={0}
-      aria-label="Upload image"
     >
+      {/* Native file input - positioned absolutely to cover entire area */}
       <input
-        ref={inputRef}
         type="file"
         accept={accept}
         onChange={handleInputChange}
-        className="hidden"
+        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+        style={{ fontSize: '16px' }} /* Prevents iOS zoom */
         capture="environment"
+        aria-label="Select image file"
       />
       
-      <div className="flex flex-col items-center gap-3 pointer-events-none">
+      {/* Visual content */}
+      <div className="flex flex-col items-center gap-3 pointer-events-none px-6 py-8">
         <div className={`
-          w-16 h-16 rounded-full flex items-center justify-center transition-colors
-          ${isDragging ? "bg-blue-100" : "bg-white shadow-sm"}
+          w-16 h-16 rounded-full flex items-center justify-center transition-colors shadow-sm
+          ${isDragging ? "bg-blue-100" : "bg-white"}
         `}>
           <FileImage className="w-8 h-8 text-gray-400" />
         </div>
@@ -118,16 +109,16 @@ export default function FileDropZone({
         <div>
           <p className="text-gray-700 font-medium mb-1 text-sm sm:text-base">{label}</p>
           <p className="text-xs sm:text-sm text-gray-500">
-            Tap to browse or take a photo
+            Click to browse or take a photo
           </p>
           <p className="text-xs text-gray-400 mt-1">
-            Max: {maxSize}MB
+            Maximum file size: {maxSize}MB
           </p>
         </div>
       </div>
 
       {error && (
-        <div className="mt-4 flex items-center gap-2 text-red-600 text-sm bg-red-50 px-4 py-2 rounded-lg">
+        <div className="absolute bottom-4 left-4 right-4 flex items-center gap-2 text-red-600 text-sm bg-red-50 px-4 py-2 rounded-lg z-20 pointer-events-none">
           <X className="w-4 h-4 flex-shrink-0" />
           <span>{error}</span>
         </div>
