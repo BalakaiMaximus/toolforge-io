@@ -94,7 +94,6 @@ export default function FileDropZone({
         onChange={handleInputChange}
         className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
         style={{ fontSize: '16px' }} /* Prevents iOS zoom */
-        capture="environment"
         aria-label="Select image file"
       />
       
