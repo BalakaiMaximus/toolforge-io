@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: toolforge-io
+    runtime: node
+    plan: starter
+    buildCommand: npm install && npm run build
+    startCommand: npx serve dist -l $PORT
+    envVars:
+      - key: NODE_ENV
+        value: production
+    autoDeploy: true
+    branch: main
+    healthCheckPath: /
