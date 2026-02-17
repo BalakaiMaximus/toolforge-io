@@ -1,7 +1,6 @@
 "use client";
 
-import { X, FileImage } from "lucide-react";
-import { useState } from "react";
+import { useState, useRef } from "react";
 
 interface FileDropZoneProps {
   onFileSelect: (file: File) => void;
@@ -14,57 +13,84 @@ export default function FileDropZone({
   onFileSelect,
   accept = "image/*",
   maxSize = 10,
-  label = "Select an image",
+  label = "Choose an image",
 }: FileDropZoneProps) {
   const [error, setError] = useState<string | null>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const onFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (!file) return;
+    if (!file) {
+      console.log("No file selected");
+      return;
+    }
 
-    // Validation
+    console.log("File selected:", file.name, file.type, file.size);
+
     if (file.size > maxSize * 1024 * 1024) {
       setError(`File too large. Maximum is ${maxSize}MB.`);
       return;
     }
-    if (!file.type.startsWith('image/')) {
-      setError('Please select an image file.');
+
+    if (!file.type.startsWith("image/")) {
+      setError("Please select an image file.");
       return;
     }
 
     setError(null);
     onFileSelect(file);
-    
-    // Reset so same file can be selected again
-    e.target.value = '';
+    e.target.value = "";
+  };
+
+  const onButtonClick = () => {
+    console.log("Button clicked, triggering file input");
+    inputRef.current?.click();
   };
 
   return (
-    <div className="w-full">
-      {/* Simple label wrapping input - most reliable method */}
-      <label 
-        htmlFor="file-upload"
-        className="flex flex-col items-center justify-center w-full h-48 border-2 border-dashed border-gray-300 rounded-xl bg-gray-50 hover:bg-gray-100 cursor-pointer transition-colors"
-        style={{ WebkitTapHighlightColor: 'transparent' }}
+    <div style={{ width: "100%" }}>
+      {/* Hidden file input */}
+      <input
+        ref={inputRef}
+        type="file"
+        accept={accept}
+        onChange={onFileChange}
+        style={{ display: "none" }}
+      />
+
+      {/* Simple button */}
+      <button
+        type="button"
+        onClick={onButtonClick}
+        style={{
+          width: "100%",
+          padding: "40px 20px",
+          border: "2px dashed #d1d5db",
+          borderRadius: "12px",
+          backgroundColor: "#f9fafb",
+          cursor: "pointer",
+          fontSize: "16px",
+          color: "#374151",
+        }}
       >
-        <div className="flex flex-col items-center justify-center pt-5 pb-6 px-4 text-center">
-          <FileImage className="w-10 h-10 text-gray-400 mb-3" />
-          <p className="mb-2 text-sm text-gray-700 font-medium">{label}</p>
-          <p className="text-xs text-gray-500">Click to browse gallery</p>
-          <p className="text-xs text-gray-400 mt-1">Max {maxSize}MB</p>
+        <div style={{ fontSize: "48px", marginBottom: "12px" }}>📁</div>
+        <div style={{ fontWeight: 500 }}>{label}</div>
+        <div style={{ fontSize: "14px", color: "#6b7280", marginTop: "8px" }}>
+          Click to browse (max {maxSize}MB)
         </div>
-        <input
-          id="file-upload"
-          type="file"
-          accept={accept}
-          onChange={handleChange}
-          className="sr-only"
-        />
-      </label>
-      
+      </button>
+
       {error && (
-        <div className="mt-3 flex items-center gap-2 text-red-600 text-sm bg-red-50 px-3 py-2 rounded-lg">
-          <X className="w-4 h-4" />
+        <div
+          style={{
+            marginTop: "12px",
+            padding: "12px 16px",
+            backgroundColor: "#fef2f2",
+            color: "#dc2626",
+            borderRadius: "8px",
+            fontSize: "14px",
+          }}
+        >
           {error}
         </div>
       )}
