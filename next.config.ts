@@ -1,8 +1,8 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  output: 'export',
-  distDir: 'dist',
+  // Removed: output: 'export' - now using Next.js server mode
+  distDir: '.next',
   trailingSlash: true,
   images: {
     unoptimized: true,
