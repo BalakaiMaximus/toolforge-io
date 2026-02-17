@@ -1,12 +1,12 @@
 "use client";
 
-import { X, FileImage, Upload } from "lucide-react";
-import { useCallback, useState, useRef } from "react";
+import { X, FileImage } from "lucide-react";
+import { useState } from "react";
 
 interface FileDropZoneProps {
   onFileSelect: (file: File) => void;
   accept?: string;
-  maxSize?: number; // in MB
+  maxSize?: number;
   label?: string;
 }
 
@@ -14,113 +14,58 @@ export default function FileDropZone({
   onFileSelect,
   accept = "image/*",
   maxSize = 10,
-  label = "Click to upload an image",
+  label = "Select an image",
 }: FileDropZoneProps) {
-  const [isDragging, setIsDragging] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
 
-  const validateFile = (file: File): boolean => {
-    setError(null);
-    
-    if (maxSize && file.size > maxSize * 1024 * 1024) {
-      setError(`File too large. Maximum size is ${maxSize}MB.`);
-      return false;
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validation
+    if (file.size > maxSize * 1024 * 1024) {
+      setError(`File too large. Maximum is ${maxSize}MB.`);
+      return;
     }
-    
     if (!file.type.startsWith('image/')) {
       setError('Please select an image file.');
-      return false;
+      return;
     }
+
+    setError(null);
+    onFileSelect(file);
     
-    return true;
+    // Reset so same file can be selected again
+    e.target.value = '';
   };
-
-  const handleFile = (file: File) => {
-    if (validateFile(file)) {
-      onFileSelect(file);
-    }
-  };
-
-  const handleButtonClick = () => {
-    // Direct click on hidden input - most reliable across browsers
-    inputRef.current?.click();
-  };
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      handleFile(file);
-      e.target.value = ''; // Reset for reselect
-    }
-  };
-
-  const handleDragOver = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    setIsDragging(true);
-  }, []);
-
-  const handleDragLeave = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    setIsDragging(false);
-  }, []);
-
-  const handleDrop = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    setIsDragging(false);
-    const file = e.dataTransfer.files[0];
-    if (file) handleFile(file);
-  }, []);
 
   return (
-    <div className="space-y-3">
-      {/* Hidden native input */}
-      <input
-        ref={inputRef}
-        type="file"
-        accept={accept}
-        onChange={handleInputChange}
-        className="hidden"
-        aria-label="Select image file"
-      />
-      
-      {/* Clickable area - works as button */}
-      <button
-        type="button"
-        onClick={handleButtonClick}
-        onDragOver={handleDragOver}
-        onDragLeave={handleDragLeave}
-        onDrop={handleDrop}
-        className={`
-          w-full border-2 border-dashed rounded-xl p-8 text-center transition-all duration-200
-          min-h-[180px] flex flex-col items-center justify-center gap-4
-          active:scale-[0.98] touch-manipulation
-          focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2
-          ${isDragging 
-            ? "border-blue-500 bg-blue-50 border-solid" 
-            : "border-gray-300 hover:border-gray-400 bg-gray-50 hover:bg-gray-100"
-          }
-        `}
+    <div className="w-full">
+      {/* Simple label wrapping input - most reliable method */}
+      <label 
+        htmlFor="file-upload"
+        className="flex flex-col items-center justify-center w-full h-48 border-2 border-dashed border-gray-300 rounded-xl bg-gray-50 hover:bg-gray-100 cursor-pointer transition-colors"
+        style={{ WebkitTapHighlightColor: 'transparent' }}
       >
-        <div className={`
-          w-14 h-14 rounded-full flex items-center justify-center transition-colors
-          ${isDragging ? "bg-blue-100" : "bg-white shadow-sm"}
-        `}>
-          <Upload className="w-6 h-6 text-gray-500" />
+        <div className="flex flex-col items-center justify-center pt-5 pb-6 px-4 text-center">
+          <FileImage className="w-10 h-10 text-gray-400 mb-3" />
+          <p className="mb-2 text-sm text-gray-700 font-medium">{label}</p>
+          <p className="text-xs text-gray-500">Click to browse gallery</p>
+          <p className="text-xs text-gray-400 mt-1">Max {maxSize}MB</p>
         </div>
-        
-        <div>
-          <p className="text-gray-700 font-medium text-base">{label}</p>
-          <p className="text-sm text-gray-500 mt-1">
-            Max size: {maxSize}MB
-          </p>
-        </div>
-      </button>
-
+        <input
+          id="file-upload"
+          type="file"
+          accept={accept}
+          onChange={handleChange}
+          className="sr-only"
+        />
+      </label>
+      
       {error && (
-        <div className="flex items-center gap-2 text-red-600 text-sm bg-red-50 px-4 py-2 rounded-lg">
-          <X className="w-4 h-4 flex-shrink-0" />
-          <span>{error}</span>
+        <div className="mt-3 flex items-center gap-2 text-red-600 text-sm bg-red-50 px-3 py-2 rounded-lg">
+          <X className="w-4 h-4" />
+          {error}
         </div>
       )}
     </div>
