@@ -2,9 +2,9 @@
 
 import { useState } from "react";
 import ToolLayout from "../components/ToolLayout";
-import TextAreaTool from "../components/TextAreaTool";
+import FileDropZone from "../components/FileDropZone";
 import { compressImage, formatFileSize } from "../lib/imageUtils";
-import { Copy, RefreshCcw, FileText, XCircle, Check, Loader2, Download, Image as ImageIcon } from "lucide-react";
+import { XCircle, Loader2, Download, FileImage } from "lucide-react";
 import toast from 'react-hot-toast';
 
 function ImageCompressorClient() {
@@ -20,7 +20,8 @@ function ImageCompressorClient() {
       const result = await compressImage(file, quality);
       const url = URL.createObjectURL(result.blob);
       setCompressedImageUrl(url);
-      toast.success('Image compressed successfully!');
+      setCompressedSize(result.compressedSize);
+      toast.success(`Compressed! Saved ${((1 - result.compressedSize / result.originalSize) * 100).toFixed(0)}%`);
     } catch (error: any) {
       toast.error(`Error compressing image: ${error.message}`);
     } finally {
@@ -46,17 +47,40 @@ function ImageCompressorClient() {
   };
 
   const originalFileSize = file ? formatFileSize(file.size) : '0 KB';
-  const compressedFileSize = compressedImageUrl ? 'Calculating...' : '0 KB'; // Placeholder
+  const [compressedSize, setCompressedSize] = useState<number>(0);
+  const compressedFileSize = compressedImageUrl ? formatFileSize(compressedSize) : '0 KB';
 
   return (
     <div className="space-y-6">
-      <TextAreaTool 
-        label="Image File"
-        value={file ? file.name : ''}
-        readOnly
-        rows={2}
-        placeholder="Drag and drop an image file here or click to upload"
-      />
+      {!file ? (
+        <FileDropZone 
+          onFileSelect={(selectedFile) => {
+            setFile(selectedFile);
+            toast.success(`Loaded: ${selectedFile.name}`);
+          }}
+          accept="image/*"
+          maxSize={10}
+          label="Drop your image here, or click to browse"
+        />
+      ) : (
+        <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+              <span className="text-blue-600 font-medium text-xs uppercase">{file.name.split('.').pop()}</span>
+            </div>
+            <div>
+              <p className="font-medium text-gray-900">{file.name}</p>
+              <p className="text-sm text-gray-500">{formatFileSize(file.size)}</p>
+            </div>
+          </div>
+          <button
+            onClick={() => setFile(null)}
+            className="text-gray-400 hover:text-red-500 transition-colors"
+          >
+            <XCircle className="w-5 h-5" />
+          </button>
+        </div>
+      )}
 
       <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
         <div className="flex items-center gap-4">
@@ -82,7 +106,7 @@ function ImageCompressorClient() {
             {isLoading ? (
               <Loader2 className="w-4 h-4 animate-spin" />
             ) : (
-              <FileText className="w-4 h-4"/>
+              <FileImage className="w-4 h-4"/>
             )}
             Compress
           </button>

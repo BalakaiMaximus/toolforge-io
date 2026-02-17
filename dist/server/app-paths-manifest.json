@@ -1,6 +1,0 @@
-{
-  "/page": "app/page.js",
-  "/image-compressor/page": "app/image-compressor/page.js",
-  "/image-resizer/page": "app/image-resizer/page.js",
-  "/image-converter/page": "app/image-converter/page.js"
-}

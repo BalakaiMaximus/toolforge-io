@@ -35,7 +35,7 @@ export async function compressImage(
           }
         },
         file.type,
-        quality / 100
+        quality
       );
     };
     
