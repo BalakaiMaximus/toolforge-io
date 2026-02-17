@@ -12,6 +12,7 @@ function ImageCompressorClient() {
   const [quality, setQuality] = useState(0.8);
   const [compressedImageUrl, setCompressedImageUrl] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [compressedSize, setCompressedSize] = useState<number>(0);
 
   const handleCompress = async () => {
     if (!file) return;
@@ -47,40 +48,46 @@ function ImageCompressorClient() {
   };
 
   const originalFileSize = file ? formatFileSize(file.size) : '0 KB';
-  const [compressedSize, setCompressedSize] = useState<number>(0);
   const compressedFileSize = compressedImageUrl ? formatFileSize(compressedSize) : '0 KB';
 
   return (
     <div className="space-y-6">
-      {!file ? (
-        <FileDropZone 
-          onFileSelect={(selectedFile) => {
-            setFile(selectedFile);
-            toast.success(`Loaded: ${selectedFile.name}`);
-          }}
-          accept="image/*"
-          maxSize={10}
-          label="Drop your image here, or click to browse"
-        />
-      ) : (
-        <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-              <span className="text-blue-600 font-medium text-xs uppercase">{file.name.split('.').pop()}</span>
+      {/* Always show upload section */}
+      <div>
+        <h3 className="text-sm font-medium text-gray-700 mb-2">
+          {file ? 'Selected File:' : 'Upload Image:'}
+        </h3>
+        
+        {file ? (
+          <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                <span className="text-blue-600 font-medium text-xs uppercase">{file.name.split('.').pop()}</span>
+              </div>
+              <div>
+                <p className="font-medium text-gray-900">{file.name}</p>
+                <p className="text-sm text-gray-500">{formatFileSize(file.size)}</p>
+              </div>
             </div>
-            <div>
-              <p className="font-medium text-gray-900">{file.name}</p>
-              <p className="text-sm text-gray-500">{formatFileSize(file.size)}</p>
-            </div>
+            <button
+              onClick={() => setFile(null)}
+              className="text-gray-400 hover:text-red-500 transition-colors"
+            >
+              <XCircle className="w-5 h-5" />
+            </button>
           </div>
-          <button
-            onClick={() => setFile(null)}
-            className="text-gray-400 hover:text-red-500 transition-colors"
-          >
-            <XCircle className="w-5 h-5" />
-          </button>
-        </div>
-      )}
+        ) : (
+          <FileDropZone 
+            onFileSelect={(selectedFile) => {
+              setFile(selectedFile);
+              toast.success(`Loaded: ${selectedFile.name}`);
+            }}
+            accept="image/*"
+            maxSize={10}
+            label="Click to upload an image"
+          />
+        )}
+      </div>
 
       <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
         <div className="flex items-center gap-4">
