@@ -1,7 +1,7 @@
 "use client";
 
 import { X, FileImage } from "lucide-react";
-import { useCallback, useState } from "react";
+import { useCallback, useState, useRef } from "react";
 
 interface FileDropZoneProps {
   onFileSelect: (file: File) => void;
@@ -18,6 +18,7 @@ export default function FileDropZone({
 }: FileDropZoneProps) {
   const [isDragging, setIsDragging] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   const validateFile = (file: File): boolean => {
     setError(null);
