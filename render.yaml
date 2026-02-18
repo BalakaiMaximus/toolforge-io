@@ -1,7 +1,7 @@
 services:
-  - type: static
+  - type: web
     name: toolforge-io
-    runtime: static
+    env: static
     buildCommand: npm install && npm run build
     staticPublishPath: ./dist
     autoDeploy: true
