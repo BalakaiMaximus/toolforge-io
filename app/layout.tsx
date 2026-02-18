@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import ChunkErrorBoundary from "./components/ChunkErrorBoundary";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -29,11 +30,33 @@ export default function RootLayout({
         <meta httpEquiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
         <meta httpEquiv="Pragma" content="no-cache" />
         <meta httpEquiv="Expires" content="0" />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              window.__chunkErrors = [];
+              window.addEventListener('error', function(e) {
+                if (e.message && e.message.includes('ChunkLoadError')) {
+                  window.__chunkErrors.push(e.message);
+                  console.warn('Chunk load error, will reload:', e.message);
+                  // Prevent multiple reloads
+                  if (!window.__reloading) {
+                    window.__reloading = true;
+                    setTimeout(function() {
+                      window.location.reload(true);
+                    }, 100);
+                  }
+                }
+              });
+            `,
+          }}
+        />
       </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased bg-gray-50 min-h-screen`}
       >
-        {children}
+        <ChunkErrorBoundary>
+          {children}
+        </ChunkErrorBoundary>
       </body>
     </html>
   );
