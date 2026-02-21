@@ -9,11 +9,20 @@
     "test": "jest --watchAll=false --runInBand"
   },
   "dependencies": {
+    "@next-auth/supabase-adapter": "^0.2.1",
+    "@stripe/stripe-js": "^8.7.0",
+    "@supabase/supabase-js": "^2.96.0",
+    "@types/qrcode": "^1.5.6",
     "lucide-react": "^0.475.0",
     "next": "15.1.7",
+    "pdf-lib": "^1.17.1",
+    "pdfjs-dist": "^5.4.624",
+    "qrcode": "^1.5.4",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "react-hot-toast": "^2.6.0"
+    "react-hot-toast": "^2.6.0",
+    "resend": "^6.9.2",
+    "stripe": "^20.3.1"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.3",
