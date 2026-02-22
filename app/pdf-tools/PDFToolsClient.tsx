@@ -197,4 +197,5 @@ function MergeTool() {
             disabled={files.length < 2 || isProcessing}
             className="w-full py-3 px-4 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
           >
-            {isProcessing ? <><Loader2 className="w-5 h-5 animate-spin" /> Merging...</> : <><Merge className="
+            {isProcessing ? <><Loader2 className="w-5 h-5 animate-spin" /> Merging...</> : <><Merge className="w-5 h-5" /> Merge PDFs</>}
+          </button>

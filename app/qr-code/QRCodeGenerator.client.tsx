@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef, ChangeEvent } from "react";
 import QRCode from 'qrcode'; // Import the qrcode library
 import {
-  QrCode, Upload, Download, Copy, RefreshCcw, Palette, Star, Key, Mail, Wifi, CreditCard, Loader2 
+  QrCode, Upload, Download, Copy, RefreshCcw, Palette, Star, Key, Mail, Wifi, CreditCard, Loader2, Zap, Crown, CheckCircle, AlertTriangle, Trash2 
 } from "lucide-react";
 import { getUsage, incrementUsage } from "@/lib/usage";
 import { useAuth } from "@/context/AuthContext";

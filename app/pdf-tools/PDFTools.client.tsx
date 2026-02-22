@@ -35,7 +35,8 @@ interface FileItem {
   size: number;
 }
 
-interface ImageFileItem extends FileItem {} // Re-using FileItem for images
+// Re-using FileItem type for images
+type ImageFileItem = FileItem;
 
 function downloadFile(data: Uint8Array, filename: string) {
   const blob = new Blob([data], { type: "application/pdf" });
@@ -295,7 +296,7 @@ function SplitTool({ onAction }: { onAction: (action: TabType) => Promise<boolea
               placeholder="e.g., 1-3, 5, 8-10"
               className="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
             />
-             <p className="text-xs text-gray-500 mt-1">Enter page numbers or ranges (e.g., `1-3` for pages 1 to 3, `5` for page 5). Each part separated by a comma.</p>
+             <p className="text-xs text-gray-500 mt-1">Enter page numbers or ranges (e.g., 1-3 for pages 1 to 3, 5 for page 5). Each part separated by a comma.</p>
           </div>
 
           <button
@@ -374,9 +375,9 @@ function ImagesToPDFTool({ onAction }: { onAction: (action: TabType) => Promise<
         const pageHeight = 841.89; // A4 height in points
         const pageWidth = 595.28; // A4 width in points
 
-        let scale = Math.min(pageWidth / width, pageHeight / height);
-        let scaledWidth = width * scale;
-        let scaledHeight = height * scale;
+        const scale = Math.min(pageWidth / width, pageHeight / height);
+        const scaledWidth = width * scale;
+        const scaledHeight = height * scale;
 
         // Center the image on the page
         const x = (pageWidth - scaledWidth) / 2;
@@ -461,7 +462,7 @@ function CompressTool({ onAction }: { onAction: (action: TabType) => Promise<boo
       <Minimize2 className="w-16 h-16 text-gray-400 mb-4" />
       <h3 className="text-xl font-semibold text-gray-700 mb-2">PDF Compression</h3>
       <p className="text-gray-500 mb-4">
-        Direct PDF compression is complex and often requires server-side processing or more advanced libraries for significant size reduction. `pdf-lib` currently offers limited compression capabilities.
+        Direct PDF compression is complex and often requires server-side processing or more advanced libraries for significant size reduction. pdf-lib currently offers limited compression capabilities.
       </p>
       <p className="text-gray-500 mb-4">
         We can explore server-side solutions or alternative libraries if this is a critical feature. For now, it's a placeholder.
